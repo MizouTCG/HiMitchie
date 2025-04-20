@@ -1,0 +1,284 @@
+package Finals;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class HiMitchie {
+    static class Node {
+        int data;
+        int prev, next;
+
+        Node(int data) {
+            this.data = data;
+            this.prev = -1;
+            this.next = -1;
+        }
+    }
+
+    static Node[] nodes = new Node[10];
+    static int head = -1;
+    static int tail = -1;
+    static int size = 0;
+    static int free = 0;
+    static int[] nextFree = new int[10];
+
+    public static void main(String[] args) {
+        for (int i = 0; i < 9; i++) nextFree[i] = i + 1;
+        nextFree[9] = -1;
+
+        try {
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Meow");
+        }
+
+        JFrame frame = new JFrame("Hi Mitchie");
+        frame.setBounds(100, 100, 560, 320);
+        frame.setLayout(null);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.getContentPane().setBackground(new Color(196, 30, 58));
+        frame.setResizable(false);
+
+        Color burgundy = new Color(128, 0, 32);
+        Color burgundypart2 = new Color(91, 65, 72);
+        Font font = new Font("SansSerif", Font.BOLD, 14);
+
+        JLabel listLabel = new JLabel("Doubly Linked List: ");
+        listLabel.setBounds(20, 20, 720, 30);
+        listLabel.setForeground(burgundypart2);
+        listLabel.setFont(font);
+        frame.add(listLabel);
+
+        JTextField inputField = new JTextField();
+        inputField.setBounds(20, 60, 200, 35);
+        inputField.setFont(font);
+        inputField.setBackground(Color.BLACK);
+        inputField.setForeground(Color.WHITE);
+        frame.add(inputField);
+
+        int bx = 20, by = 110, bw = 160, bh = 35, gapX = 170, gapY = 45;
+
+        JButton pushBtn = createButton("Push", bx, by, bw, bh, burgundy, font);
+        JButton insertMiddleBtn = createButton("Insert Middle", bx + gapX, by, bw, bh, burgundy, font);
+        JButton insertEndBtn = createButton("Add (End)", bx + 2 * gapX, by, bw, bh, burgundy, font);
+
+        JButton popBtn = createButton("Pop", bx, by + gapY, bw, bh, burgundy, font);
+        JButton deletePosBtn = createButton("Delete at Pos", bx + gapX, by + gapY, bw, bh, burgundy, font);
+        JButton removeBtn = createButton("Remove", bx + 2 * gapX, by + gapY, bw, bh, burgundy, font);
+
+        JButton topBtn = createButton("Top", bx + gapX, by + 2 * gapY, bw, bh, burgundy, font);
+
+        frame.add(pushBtn);
+        frame.add(insertMiddleBtn);
+        frame.add(insertEndBtn);
+        frame.add(popBtn);
+        frame.add(deletePosBtn);
+        frame.add(removeBtn);
+        frame.add(topBtn);
+
+        pushBtn.addActionListener(e -> {
+            try {
+                int val = Integer.parseInt(inputField.getText().trim());
+                push(val);
+                inputField.setText("");
+                listLabel.setText("Doubly Linked List: " + display());
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(frame, "Enter valid number!");
+            }
+        });
+
+        insertEndBtn.addActionListener(e -> {
+            try {
+                int val = Integer.parseInt(inputField.getText().trim());
+                insertEnd(val);
+                inputField.setText("");
+                listLabel.setText("Doubly Linked List: " + display());
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(frame, "Enter valid number!");
+            }
+        });
+
+        insertMiddleBtn.addActionListener(e -> {
+            try {
+                int val = Integer.parseInt(inputField.getText().trim());
+                insertMiddle(val);
+                inputField.setText("");
+                listLabel.setText("Doubly Linked List: " + display());
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(frame, "Enter valid number!");
+            }
+        });
+
+        popBtn.addActionListener(e -> {
+            pop();
+            listLabel.setText("Doubly Linked List: " + display());
+        });
+
+        deletePosBtn.addActionListener(e -> {
+            try {
+                int pos = Integer.parseInt(inputField.getText().trim());
+                deleteAt(pos);
+                inputField.setText("");
+                listLabel.setText("Doubly Linked List: " + display());
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(frame, "Enter valid position!");
+            }
+        });
+
+        removeBtn.addActionListener(e -> {
+            try {
+                int val = Integer.parseInt(inputField.getText().trim());
+                remove(val);
+                inputField.setText("");
+                listLabel.setText("Doubly Linked List: " + display());
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(frame, "Enter valid number!");
+            }
+        });
+
+        topBtn.addActionListener(e -> {
+            if (head == -1) {
+                JOptionPane.showMessageDialog(frame, "List is empty!");
+            } else {
+                JOptionPane.showMessageDialog(frame, "Top Element: " + nodes[head].data);
+            }
+        });
+
+        frame.setVisible(true);
+    }
+
+    static JButton createButton(String text, int x, int y, int w, int h, Color bg, Font font) {
+        JButton btn = new JButton(text);
+        btn.setBounds(x, y, w, h);
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(font);
+        return btn;
+    }
+
+    static int allocate(int value) {
+        if (free == -1) return -1;
+        int idx = free;
+        nodes[idx] = new Node(value);
+        free = nextFree[free];
+        return idx;
+    }
+
+    static void freeNode(int idx) {
+        nextFree[idx] = free;
+        free = idx;
+    }
+
+    static void push(int val) {
+        if (size >= 10) return;
+        int idx = allocate(val);
+        if (head == -1) {
+            head = tail = idx;
+        } else {
+            nodes[idx].next = head;
+            nodes[head].prev = idx;
+            head = idx;
+        }
+        size++;
+    }
+
+    static void insertEnd(int val) {
+        if (size >= 10) return;
+        int idx = allocate(val);
+        if (tail == -1) {
+            head = tail = idx;
+        } else {
+            nodes[tail].next = idx;
+            nodes[idx].prev = tail;
+            tail = idx;
+        }
+        size++;
+    }
+
+    static void insertMiddle(int val) {
+        if (size >= 10) return;
+        int idx = allocate(val);
+        if (head == -1) {
+            head = tail = idx;
+        } else {
+            int mid = size / 2;
+            int temp = head;
+            for (int i = 0; i < mid; i++) temp = nodes[temp].next;
+
+            int prev = nodes[temp].prev;
+
+            nodes[idx].next = temp;
+            nodes[idx].prev = prev;
+
+            if (prev != -1) nodes[prev].next = idx;
+            else head = idx;
+
+            nodes[temp].prev = idx;
+        }
+        size++;
+    }
+
+    static void pop() {
+        if (head == -1) return;
+        int temp = head;
+        head = nodes[head].next;
+        if (head != -1) nodes[head].prev = -1;
+        else tail = -1;
+        freeNode(temp);
+        size--;
+    }
+
+    static void deleteAt(int pos) {
+        if (pos < 0 || pos >= size) return;
+        int curr = head;
+        for (int i = 0; i < pos; i++) curr = nodes[curr].next;
+
+        int prev = nodes[curr].prev;
+        int next = nodes[curr].next;
+
+        if (prev != -1) nodes[prev].next = next;
+        else head = next;
+
+        if (next != -1) nodes[next].prev = prev;
+        else tail = prev;
+
+        freeNode(curr);
+        size--;
+    }
+
+    static void remove(int val) {
+        int curr = head;
+        while (curr != -1 && nodes[curr].data != val) {
+            curr = nodes[curr].next;
+        }
+        if (curr == -1) return;
+
+        int prev = nodes[curr].prev;
+        int next = nodes[curr].next;
+
+        if (prev != -1) nodes[prev].next = next;
+        else head = next;
+
+        if (next != -1) nodes[next].prev = prev;
+        else tail = prev;
+
+        freeNode(curr);
+        size--;
+    }
+
+    static String display() {
+        StringBuilder sb = new StringBuilder();
+        int curr = head;
+        while (curr != -1) {
+            sb.append(nodes[curr].data).append(" ⇄ ");
+            curr = nodes[curr].next;
+        }
+        return sb.append("NULL").toString();
+    }
+}
