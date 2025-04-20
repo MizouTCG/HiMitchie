@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public class HiMitchie {
+public class DoublyLinkedLists {
     static class Node {
         int data;
         int prev, next;
@@ -38,7 +38,7 @@ public class HiMitchie {
             System.out.println("Meow");
         }
 
-        JFrame frame = new JFrame("Hi Mitchie");
+        JFrame frame = new JFrame("Linked Lists");
         frame.setBounds(100, 100, 560, 320);
         frame.setLayout(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
